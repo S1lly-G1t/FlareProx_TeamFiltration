@@ -6,6 +6,8 @@
 
 <pre lang=lisp>.\TeamFiltration_FlareProx.exe  --outpath '[PATH/FOR/.db FILE]' --config .\TeamFiltrationConfig_Example.json --spray --usernames 'valid_users.txt' --passwords 'SeasonYear_Pass.txt' --domain example.com --shuffle-regions --jitter 60  --debug http://127.0.0.1:8080</pre>
 
+It will use your flareprox endpoints by default (by reading the ```flareprox_endpoints.json``` file) - unless you use ``` --allow-direct        Allow direct connections if FlareProx endpoints are unavailable (NOT RECOMMENDED - IP will be logged) ```
+
 ### The ```flareprox_endpoints.json``` is generated using [https://github.com/MrTurvey/flareprox](url)
 <pre lang=lisp>
 flareprox.py --count [Amount of endpoints you want to spin up]</pre>
