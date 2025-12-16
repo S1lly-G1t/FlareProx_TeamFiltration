@@ -1,5 +1,5 @@
 <p align="center">
-<img width="560" height="446" alt="TeamFiltrationFlareProx" src="https://github.com/user-attachments/assets/73eade70-4114-4ea2-9aaf-20ec6b18d555" />
+<img width="865" height="444" alt="Untitled Diagram drawio" src="https://github.com/user-attachments/assets/a1db99fd-131b-4ebb-8288-a132e681ddb5" />
 </p>
 
 
