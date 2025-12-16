@@ -1,5 +1,5 @@
 /**
- * FlareProx - Cloudflare Worker URL Redirection Script - Modified for TeamFiltration enum modules
+ * FlareProx - Cloudflare Worker URL Redirection Script - Modified for TeamFiltration enum module.
  */
 addEventListener('fetch', event => {
   event.respondWith(handleRequest(event.request))
@@ -139,4 +139,5 @@ function createErrorResponse(error, details, status) {
 
 function generateRandomIP() {
   return [1, 2, 3, 4].map(() => Math.floor(Math.random() * 255) + 1).join('.')
+
 }
