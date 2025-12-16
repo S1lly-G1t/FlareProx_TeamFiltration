@@ -1,3 +1,7 @@
+<img width="562" height="444" alt="TeamFiltrationFlareProx" src="https://github.com/user-attachments/assets/4c80a8ff-0d43-4c5e-9e22-2ffb15082ce1" />
+
+
+
 Note: The usage is the same: 
 e.g. .\TeamFiltration_FlareProx.exe  --outpath '[PATH/FOR/.db FILE]' --config .\TeamFiltrationConfig_Example.json --spray --usernames 'valid_users.txt' --passwords 'SeasonYear_Pass.txt' --domain example.com --shuffle-regions --jitter 60  --debug http://127.0.0.1:8080
 
