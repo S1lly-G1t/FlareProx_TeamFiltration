@@ -1,9 +1,3 @@
-TeamFiltration_FlareProx.exe         ← Single executable (Most dependencies included)
-├── SQLite.Interop.dll				 ← Required Dependency (Needs to be in the same directory as TeamFiltration_FlareProx.exe)
-├── sni.dll 							 ← Required Dependency (Needs to be in the same directory as TeamFiltration_FlareProx.exe)
-├── TeamFiltrationConfig.json       ← Your config file (copy manually into same directory as TeamFiltration_FlareProx.exe)
-└── flareprox_endpoints.json        ← FlareProx endpoints (copy manually into same directory as TeamFiltration_FlareProx.exe)
-
 Note: The usage is the same: 
 e.g. .\TeamFiltration_FlareProx.exe  --outpath '[PATH/FOR/.db FILE]' --config .\TeamFiltrationConfig_Example.json --spray --usernames 'valid_users.txt' --passwords 'SeasonYear_Pass.txt' --domain example.com --shuffle-regions --jitter 60  --debug http://127.0.0.1:8080
 
