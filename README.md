@@ -11,6 +11,10 @@ The AWS keys can be ignored in the TeamFiltrationConfig.json as that feature has
 The flareprox_endpoints.json is generated using ```flareprox.py --count [Amount of endpoints you want to spin up]```
 If you have 2 endpoints in flareprox_endpoints.json and use ```--shuffle-regions```, it will randomly pick between them for each spray attempt. (You don't really need to do this as a single endpoint always sends each request with a different IP address - 1 endpoint is enough)
 
+<pre lang=lisp>(trivial-toplevel-prompt:set-toplevel-prompt "~*~a~@[(~d)~]: ")
+;; CL-USER(7):
+</pre>
+
 [https://github.com/MrTurvey/flareprox](url)
 
 (The normal teamfiltration tool uses AWS keys to auth to AWS gateway API and create new proxy APIs. teamfiltration_FlareProx does not do this. Cloudflare proxy APIs are created by flareprox.py and the teamfiltration_FlareProx.exe only wants the resulting flareprox_endpoints.json file)
