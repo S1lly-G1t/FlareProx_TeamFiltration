@@ -1,5 +1,5 @@
 <p align="center">
-<img width="562" height="444" alt="TeamFiltrationFlareProx" src="https://github.com/user-attachments/assets/4c80a8ff-0d43-4c5e-9e22-2ffb15082ce1" />
+<img width="560" height="446" alt="TeamFiltrationFlareProx" src="https://github.com/user-attachments/assets/73eade70-4114-4ea2-9aaf-20ec6b18d555" />
 </p>
 
 
