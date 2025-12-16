@@ -1,5 +1,6 @@
+<p align="center">
 <img width="562" height="444" alt="TeamFiltrationFlareProx" src="https://github.com/user-attachments/assets/4c80a8ff-0d43-4c5e-9e22-2ffb15082ce1" />
-
+</p>
 
 
 ### Note: The usage is the same
