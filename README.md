@@ -15,4 +15,4 @@ If you have 2 endpoints in ```flareprox_endpoints.json``` and use ```--shuffle-r
 
 The AWS keys can be ignored in the ```TeamFiltrationConfig.json``` as that feature has been disabled with this version.
 
-If you want to use the ```--enum``` module with flareprox, then you will need to copy the code in ```CloudFlareWorker.js``` and paste it inside your ```worker.js``` on [https://dash.cloudflare.com/](url)
+If you want to use the ```--enum --validate-teams``` module with flareprox, then you will need to copy the code in ```CloudFlareWorker.js``` and paste it inside your ```worker.js``` on [https://dash.cloudflare.com/](url)
