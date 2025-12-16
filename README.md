@@ -4,16 +4,13 @@
 
 Note: The usage is the same: 
 
-```.\TeamFiltration_FlareProx.exe  --outpath '[PATH/FOR/.db FILE]' --config .\TeamFiltrationConfig_Example.json --spray --usernames 'valid_users.txt' --passwords 'SeasonYear_Pass.txt' --domain example.com --shuffle-regions --jitter 60  --debug http://127.0.0.1:8080```
+<pre lang=lisp>.\TeamFiltration_FlareProx.exe  --outpath '[PATH/FOR/.db FILE]' --config .\TeamFiltrationConfig_Example.json --spray --usernames 'valid_users.txt' --passwords 'SeasonYear_Pass.txt' --domain example.com --shuffle-regions --jitter 60  --debug http://127.0.0.1:8080</pre>
 
 The AWS keys can be ignored in the TeamFiltrationConfig.json as that feature has been disabled with this version.
 
-The flareprox_endpoints.json is generated using ```flareprox.py --count [Amount of endpoints you want to spin up]```
+The flareprox_endpoints.json is generated using <pre lang=lisp>
+flareprox.py --count [Amount of endpoints you want to spin up]</pre>
 If you have 2 endpoints in flareprox_endpoints.json and use ```--shuffle-regions```, it will randomly pick between them for each spray attempt. (You don't really need to do this as a single endpoint always sends each request with a different IP address - 1 endpoint is enough)
-
-<pre lang=lisp>(trivial-toplevel-prompt:set-toplevel-prompt "~*~a~@[(~d)~]: ")
-;; CL-USER(7):
-</pre>
 
 [https://github.com/MrTurvey/flareprox](url)
 
