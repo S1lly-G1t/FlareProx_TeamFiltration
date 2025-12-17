@@ -289,6 +289,12 @@ namespace TeamFiltration.Handlers
 				{
 					// Get next FlareProx endpoint using round-robin
 					string flareProxUrl = _flareProxHandler.GetNextEndpoint();
+					// Ensure the URL is clean (no trailing slashes, proper format)
+					flareProxUrl = flareProxUrl.TrimEnd('/');
+					if (!flareProxUrl.StartsWith("http"))
+					{
+						flareProxUrl = "https://" + flareProxUrl;
+					}
 					// Return the FlareProx endpoint URL (the target URL will be set via X-Target-URL header)
 					return (null, null, flareProxUrl);
 				}

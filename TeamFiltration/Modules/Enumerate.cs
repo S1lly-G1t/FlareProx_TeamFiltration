@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -471,7 +471,8 @@ namespace TeamFiltration.Modules
 						domain = "@" + domain;
 					}
 
-					string url = $"{enumUserUrl.fireProxUrl}common/GetCredentialType";
+					// Use FlareProx endpoint URL directly (X-Target-URL will be set in ValidateO365Account)
+					string url = enumUserUrl.fireProxUrl;
 
 					//This method only works for Tenants were AAD is federating, not adfs or any third party auth
 

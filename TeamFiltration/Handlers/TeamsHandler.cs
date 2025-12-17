@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -164,8 +164,42 @@ namespace TeamFiltration.Handlers
             int failedCount = 0;
 
         failedResp:
-            //TODO:Add logic to select FireProx endpoint based on current location 
-            var enumUserReq = await _teamsClient.GetAsync(enumUserUrl + $"{TeamsRegion}/beta/users/{username}/externalsearchv3");
+            // Build the target Teams API URL
+            string targetUrl = $"https://teams.microsoft.com/api/mt/{TeamsRegion}/beta/users/{username}/externalsearchv3";
+            
+            HttpResponseMessage enumUserReq;
+            
+            // Check if enumUserUrl is a FlareProx endpoint (contains "workers.dev")
+            if (enumUserUrl.Contains("workers.dev"))
+            {
+                // Clean the FlareProx URL (remove any accidentally appended paths)
+                string cleanFlareProxUrl = enumUserUrl;
+                if (cleanFlareProxUrl.Contains("amer") || cleanFlareProxUrl.Contains("emea") || cleanFlareProxUrl.Contains("apac"))
+                {
+                    // Extract just the FlareProx endpoint domain
+                    int workersIndex = cleanFlareProxUrl.IndexOf("workers.dev");
+                    if (workersIndex > 0)
+                    {
+                        cleanFlareProxUrl = cleanFlareProxUrl.Substring(0, workersIndex + "workers.dev".Length);
+                    }
+                }
+                cleanFlareProxUrl = cleanFlareProxUrl.TrimEnd('/');
+                if (!cleanFlareProxUrl.StartsWith("http"))
+                {
+                    cleanFlareProxUrl = "https://" + cleanFlareProxUrl;
+                }
+                
+                // Use FlareProx endpoint URL and add X-Target-URL header
+                _teamsClient.DefaultRequestHeaders.Remove("X-Target-URL");
+                _teamsClient.DefaultRequestHeaders.Add("X-Target-URL", targetUrl);
+                enumUserReq = await _teamsClient.GetAsync(cleanFlareProxUrl);
+                _teamsClient.DefaultRequestHeaders.Remove("X-Target-URL");
+            }
+            else
+            {
+                // Direct connection (fallback)
+                enumUserReq = await _teamsClient.GetAsync(targetUrl);
+            }
             if (enumUserReq.IsSuccessStatusCode)
             {
 

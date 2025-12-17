@@ -823,6 +823,58 @@ namespace TeamFiltration.Handlers
 
             using (var clientHttp = new HttpClient(httpClientHandler))
             {
+                // Determine if this is a FlareProx endpoint and construct proper URLs
+                string requestUrl = url;
+                string targetUrl = "https://login.microsoftonline.com/common/GetCredentialType";
+                
+                if (url.Contains("workers.dev"))
+                {
+                    // This is a FlareProx endpoint - extract the clean endpoint URL
+                    // Handle malformed URLs that might have paths appended
+                    if (url.Contains("common/GetCredentialType"))
+                    {
+                        // Extract the FlareProx endpoint (everything before "common")
+                        int commonIndex = url.IndexOf("common/GetCredentialType");
+                        string flareProxEndpoint = url.Substring(0, commonIndex);
+                        // Remove any trailing slashes or paths
+                        flareProxEndpoint = flareProxEndpoint.TrimEnd('/');
+                        if (!flareProxEndpoint.StartsWith("http"))
+                        {
+                            flareProxEndpoint = "https://" + flareProxEndpoint;
+                        }
+                        requestUrl = flareProxEndpoint;
+                    }
+                    else if (url.Contains("amer") || url.Contains("emea") || url.Contains("apac"))
+                    {
+                        // Handle malformed URLs with Teams region appended (e.g., "workers.devamer")
+                        // Extract just the FlareProx endpoint domain
+                        int workersIndex = url.IndexOf("workers.dev");
+                        if (workersIndex > 0)
+                        {
+                            string flareProxEndpoint = url.Substring(0, workersIndex + "workers.dev".Length);
+                            if (!flareProxEndpoint.StartsWith("http"))
+                            {
+                                flareProxEndpoint = "https://" + flareProxEndpoint;
+                            }
+                            requestUrl = flareProxEndpoint;
+                        }
+                    }
+                    else
+                    {
+                        // Clean FlareProx endpoint URL
+                        requestUrl = url.TrimEnd('/');
+                        if (!requestUrl.StartsWith("http"))
+                        {
+                            requestUrl = "https://" + requestUrl;
+                        }
+                    }
+                }
+                else
+                {
+                    // Direct connection - use URL as-is (should already be full URL)
+                    requestUrl = url;
+                    targetUrl = null; // No X-Target-URL needed for direct connections
+                }
 
                 GetCredentialType getCredTypeJson = new GetCredentialType()
                 {
@@ -844,7 +896,20 @@ namespace TeamFiltration.Handlers
 
                 };
 
-                var postAsyncReq = await clientHttp.PostAsync(url, new StringContent(JsonConvert.SerializeObject(getCredTypeJson), Encoding.UTF8, "application/json"));
+                // Add X-Target-URL header if using FlareProx
+                if (!string.IsNullOrEmpty(targetUrl))
+                {
+                    clientHttp.DefaultRequestHeaders.Remove("X-Target-URL");
+                    clientHttp.DefaultRequestHeaders.Add("X-Target-URL", targetUrl);
+                }
+
+                var postAsyncReq = await clientHttp.PostAsync(requestUrl, new StringContent(JsonConvert.SerializeObject(getCredTypeJson), Encoding.UTF8, "application/json"));
+                
+                // Remove X-Target-URL header after request
+                if (!string.IsNullOrEmpty(targetUrl))
+                {
+                    clientHttp.DefaultRequestHeaders.Remove("X-Target-URL");
+                }
 
                 if (postAsyncReq.IsSuccessStatusCode)
                 {
