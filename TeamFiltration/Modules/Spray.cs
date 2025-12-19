@@ -605,6 +605,32 @@ namespace TeamFiltration.Modules
 			//Get all previous password and email combinations
 			List<string> allCombos = databaseHandle.QueryAllCombos();
 
+			// Calculate combination statistics
+			int totalPossibleCombinations = totalUsersInList * passwordList.Count;
+			int combinationsAttempted = allCombos.Count;
+			int combinationsRemaining = totalPossibleCombinations - combinationsAttempted;
+
+			// Calculate rounds remaining based on untried passwords per user
+			int roundsRemaining = 0;
+			if (bufferuserNameList.Count > 0 && passwordList.Count > 0)
+			{
+				var usersWithUntriedPasswords = bufferuserNameList
+					.Select(user => new {
+						Username = user,
+						UntriedCount = passwordList.Count - 
+							allCombos.Where(c => c.StartsWith(user.ToLower() + ":"))
+									 .Select(c => c.Split(':')[1])
+									 .Distinct()
+									 .Count()
+					})
+					.Where(u => u.UntriedCount > 0)
+					.ToList();
+
+				roundsRemaining = usersWithUntriedPasswords.Any() 
+					? usersWithUntriedPasswords.Max(u => u.UntriedCount)
+					: 0;
+			}
+
 			var fireProxList = new List<(Amazon.APIGateway.Model.CreateDeploymentRequest, Models.AWS.FireProxEndpoint, string fireProxUrl)>();
 
 			if (shuffleUsersBool)
@@ -743,21 +769,48 @@ namespace TeamFiltration.Modules
 				estimatedSeconds = (batches - 1) * delayInSeconds;
 			}
 
-			// Calculate total unique passwords that need to be tried
-			// This is the maximum number of rounds needed (one password per user per round)
-			int totalUniquePasswords = passwordList.Count;
 			int usersInThisRound = listOfSprayAttempts.Select(x => x.Username).Distinct().Count();
+			int combinationsInThisRound = listOfSprayAttempts.Count;
 
-			// Display round information
+			// Recalculate combination statistics for this round
+			int currentCombinationsAttempted = allCombos.Count + combinationsInThisRound;
+			int currentCombinationsRemaining = totalPossibleCombinations - currentCombinationsAttempted;
+
+			// Recalculate rounds remaining for this round (in case it changed)
+			int currentRoundsRemaining = 0;
+			if (bufferuserNameList.Count > 0 && passwordList.Count > 0)
+			{
+				var usersWithUntriedPasswords = bufferuserNameList
+					.Select(user => new {
+						Username = user,
+						UntriedCount = passwordList.Count - 
+							allCombos.Where(c => c.StartsWith(user.ToLower() + ":"))
+									 .Select(c => c.Split(':')[1])
+									 .Distinct()
+									 .Count()
+					})
+					.Where(u => u.UntriedCount > 0)
+					.ToList();
+
+				currentRoundsRemaining = usersWithUntriedPasswords.Any() 
+					? usersWithUntriedPasswords.Max(u => u.UntriedCount)
+					: 0;
+			}
+
+			// Display iteration information
 			TimeSpan estimatedTime = TimeSpan.FromSeconds(estimatedSeconds);
 			string timeEstimate = estimatedSeconds > 0 
 				? $"Estimated time: {estimatedTime.TotalMinutes:F1} minutes ({estimatedTime.TotalSeconds:F0} seconds)"
 				: "Estimated time: < 1 second";
 
+			string roundsRemainingText = currentRoundsRemaining > 0 
+				? $" (~{currentRoundsRemaining} iterations remaining)"
+				: " (all combinations attempted)";
+
 			Console.ForegroundColor = ConsoleColor.Green;
-			Console.WriteLine($"[+] Round {roundNumber} of {totalUniquePasswords} passwords - Spraying {usersInThisRound} users ({totalUsersInList} users per round) - {timeEstimate}");
+			Console.WriteLine($"[+] Iteration {roundNumber} - {currentCombinationsAttempted} combinations attempted ({currentCombinationsRemaining} remaining){roundsRemainingText} - Spraying {usersInThisRound} users ({totalUsersInList} users per iteration) - {timeEstimate}");
 			Console.ResetColor();
-			databaseHandle.WriteLog(new Log("SPRAY", $"Round {roundNumber} of {totalUniquePasswords} passwords - Spraying {usersInThisRound} users ({totalUsersInList} users per round) - {timeEstimate}"));
+			databaseHandle.WriteLog(new Log("SPRAY", $"Iteration {roundNumber} - {currentCombinationsAttempted} combinations attempted ({currentCombinationsRemaining} remaining){roundsRemainingText} - Spraying {usersInThisRound} users ({totalUsersInList} users per iteration) - {timeEstimate}"));
 
 			var validAccounts = await SprayAttemptWrap(listOfSprayAttempts, _globalProperties, databaseHandle, getUserRealmResult, delayInSeconds, regionCounter, parallelCount);
 
