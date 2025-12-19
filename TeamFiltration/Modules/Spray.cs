@@ -478,6 +478,9 @@ namespace TeamFiltration.Modules
 
 			//Remove user exlucde users.
 			userNameListGlobal = userNameListGlobal.Except(excludeList).ToArray();
+			
+			// Store total users count before filtering for this round
+			int totalUsersInList = userNameListGlobal.Length;
 
 
 			//Generate a random sleep time based on min-max
@@ -752,9 +755,9 @@ namespace TeamFiltration.Modules
 				: "Estimated time: < 1 second";
 
 			Console.ForegroundColor = ConsoleColor.Green;
-			Console.WriteLine($"[+] Round {roundNumber} of {totalUniquePasswords} passwords - Spraying {usersInThisRound} users ({listOfSprayAttempts.Count} attempts per round) - {timeEstimate}");
+			Console.WriteLine($"[+] Round {roundNumber} of {totalUniquePasswords} passwords - Spraying {usersInThisRound} users ({totalUsersInList} users per round) - {timeEstimate}");
 			Console.ResetColor();
-			databaseHandle.WriteLog(new Log("SPRAY", $"Round {roundNumber} of {totalUniquePasswords} passwords - Spraying {usersInThisRound} users ({listOfSprayAttempts.Count} attempts per round) - {timeEstimate}"));
+			databaseHandle.WriteLog(new Log("SPRAY", $"Round {roundNumber} of {totalUniquePasswords} passwords - Spraying {usersInThisRound} users ({totalUsersInList} users per round) - {timeEstimate}"));
 
 			var validAccounts = await SprayAttemptWrap(listOfSprayAttempts, _globalProperties, databaseHandle, getUserRealmResult, delayInSeconds, regionCounter, parallelCount);
 
