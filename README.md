@@ -19,3 +19,19 @@ If you want to use the ```--enum --validate-teams``` module with flareprox, then
 (The normal teamfiltration tool uses AWS keys to auth to AWS gateway API and create new proxy APIs. ```teamfiltration_FlareProx.exe``` does not do this. Cloudflare proxy APIs are created by ```flareprox.py``` and the   ```teamfiltration_FlareProx.exe``` only wants the resulting ```flareprox_endpoints.json``` file in the same working directory, or specified using ```--flareprox-endpoints <Path>```)
 
 The AWS keys can be ignored in the ```TeamFiltrationConfig.json``` as that feature has been disabled with this version.
+
+### Compile code
+In the `.sln` directory run:
+<pre lang=lisp>dotnet restore</pre>
+In the `.csproj` directory run:
+<pre lang=lisp>dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:UseAppHost=true</pre>
+The required files will be in the `\TeamFiltration\TeamFiltration\bin` directory and the OneDriveAPI .dll will be in `\TeamFiltration\OneDriveAPI\bin`
+
+The following files need to be in the same directory when executing the tool:
+<pre lang=lisp>
+TeamFiltration_FlareProx.exe        ← Single executable (Most dependencies included)
+├── SQLite.Interop.dll				      ← Required Dependency (Needs to be in the same directory as TeamFiltration_FlareProx.exe)
+├── sni.dll 							          ← Required Dependency (Needs to be in the same directory as TeamFiltration_FlareProx.exe)
+├── TeamFiltrationConfig.json       ← Your config file (copy manually into same directory as TeamFiltration_FlareProx.exe)
+├── KoenZomers.OneDrive.Api         ← OneDriveAPI .dll (copy manually into same directory as TeamFiltration_FlareProx.exe)
+└── flareprox_endpoints.json        ← FlareProx endpoints (copy manually into same directory as TeamFiltration_FlareProx.exe)</pre>
