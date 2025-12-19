@@ -30,8 +30,8 @@ The required files will be in the `\TeamFiltration\TeamFiltration\bin` directory
 The following files need to be in the same directory when executing the tool:
 <pre lang=lisp>
 TeamFiltration_FlareProx.exe        ← Single executable (Most dependencies included)
-├── SQLite.Interop.dll				      ← Required Dependency (Needs to be in the same directory as TeamFiltration_FlareProx.exe)
-├── sni.dll 							          ← Required Dependency (Needs to be in the same directory as TeamFiltration_FlareProx.exe)
-├── TeamFiltrationConfig.json       ← Your config file (copy manually into same directory as TeamFiltration_FlareProx.exe)
-├── KoenZomers.OneDrive.Api         ← OneDriveAPI .dll (copy manually into same directory as TeamFiltration_FlareProx.exe)
-└── flareprox_endpoints.json        ← FlareProx endpoints (copy manually into same directory as TeamFiltration_FlareProx.exe)</pre>
+├── SQLite.Interop.dll				      ← Required Dependency 
+├── sni.dll 							          ← Required Dependency 
+├── TeamFiltrationConfig.json       ← Your config file 
+├── KoenZomers.OneDrive.Api         ← OneDriveAPI .dll 
+└── flareprox_endpoints.json        ← FlareProx endpoints </pre>
