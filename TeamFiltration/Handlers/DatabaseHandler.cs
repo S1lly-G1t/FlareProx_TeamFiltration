@@ -1,4 +1,4 @@
-﻿using LiteDB;
+using LiteDB;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -173,26 +173,21 @@ namespace TeamFiltration.Handlers
 
 		public void WriteLog(Log inputLog, bool printLog = true, bool WriteLine = true)
 		{
-			//TimeZoneInfo
-
-			//TimeZoneInfo easternZone = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
-			TimeZoneInfo easternZone = TZConvert.GetTimeZoneInfo("Eastern Standard Time");
-
 			if (printLog)
 				if (string.IsNullOrEmpty(inputLog.Prefix))
 					if (WriteLine)
-						Console.WriteLine($"[{inputLog.Module}] {TimeZoneInfo.ConvertTimeFromUtc(inputLog.Timestamp.ToUniversalTime(), easternZone)} EST {inputLog.Message}");
+						Console.WriteLine($"[{inputLog.Module}] {inputLog.Timestamp.ToUniversalTime():dd/MM/yyyy HH:mm:ss} UTC {inputLog.Message}");
 					else
-						Console.Write($"\r[{inputLog.Module}] {TimeZoneInfo.ConvertTimeFromUtc(inputLog.Timestamp.ToUniversalTime(), easternZone)} EST {inputLog.Message}");
+						Console.Write($"\r[{inputLog.Module}] {inputLog.Timestamp.ToUniversalTime():dd/MM/yyyy HH:mm:ss} UTC {inputLog.Message}");
 				else
 				{
 					var msgPartOne = inputLog.Message.Split("=>")[0];
 					var msgPartTwo = inputLog.Message.Split("=>")[1];
 					var message = msgPartOne.PadRight(60) + "=>" + msgPartTwo;
 					if (WriteLine)
-						Console.WriteLine($"[{inputLog.Module}] {inputLog.Prefix.PadRight(12)} {TimeZoneInfo.ConvertTimeFromUtc(inputLog.Timestamp.ToUniversalTime(), easternZone)} EST {message}");
+						Console.WriteLine($"[{inputLog.Module}] {inputLog.Prefix.PadRight(12)} {inputLog.Timestamp.ToUniversalTime():dd/MM/yyyy HH:mm:ss} UTC {message}");
 					else
-						Console.Write($"\r[{inputLog.Module}] {inputLog.Prefix.PadRight(12)} {TimeZoneInfo.ConvertTimeFromUtc(inputLog.Timestamp.ToUniversalTime(), easternZone)} EST {message}");
+						Console.Write($"\r[{inputLog.Module}] {inputLog.Prefix.PadRight(12)} {inputLog.Timestamp.ToUniversalTime():dd/MM/yyyy HH:mm:ss} UTC {message}");
 				}
 
 

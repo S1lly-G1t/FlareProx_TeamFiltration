@@ -39,30 +39,44 @@ namespace TeamFiltration
             Console.WriteLine("         --us-cloud            When spraying companies attached to US Tenants (https://login.microsoftonline.us/)\n");
 
             Console.WriteLine("         --passwords           Path to a list of passwords, common weak-passwords will be generated if not supplied");
+            Console.WriteLine("                                e.g. --passwords <path>");
             Console.WriteLine("         --usernames           Path to a list of usernames/emails to spray (if not provided, uses users from database)");
+            Console.WriteLine("                                e.g. --usernames <path>");
             Console.WriteLine("         --exclude             Path to a list of emails to exclude from spraying");
+            Console.WriteLine("                                e.g. --exclude <path>");
             Console.WriteLine("         --seasons-only        Password genersated for spraying will only be based on seasons");
             Console.WriteLine("         --months-only         Password generated for spraying will only be based on months");
             Console.WriteLine("         --common-only         Spray with the top 20 most common passwords");
-            Console.WriteLine("         --shuffle-passwords   Shuffle the passwordlist before spraying");
             Console.WriteLine("         --shuffle-users       Shuffle the target userlist before spraying");
             Console.WriteLine("         --shuffle-regions     Shuffle FlareProx endpoints when spraying");
             Console.WriteLine("         --flareprox-endpoints  Path to flareprox_endpoints.json file (default: flareprox_endpoints.json in exe directory)");
+            Console.WriteLine("                                e.g. --flareprox-endpoints <path>");
             Console.WriteLine("         --allow-direct        Allow direct connections if FlareProx endpoints are unavailable (NOT RECOMMENDED - IP will be logged)\n");
             Console.WriteLine("         --auto-exfil          If valid login is found, auto start the exfil module\n");
 
 
             Console.WriteLine("         --sleep-min           Minimum minutes to sleep between each full rotation of spraying default=60");
+            Console.WriteLine("                                e.g. --sleep-min <minutes>");
             Console.WriteLine("         --sleep-max           Maximum minutes to sleep between each full rotation of spraying default=100");
-            Console.WriteLine("         --jitter              Seconds between each individual authentication attempt. default=0");
+            Console.WriteLine("                                e.g. --sleep-max <minutes>");
+            Console.WriteLine("         --jitter              Seconds delay: between each request (sequential) or between rounds (parallel). default=0");
+            Console.WriteLine("                                e.g. --jitter <seconds>");
+            Console.WriteLine("         --parallel            Number of parallel requests per round. If not specified, requests are sequential. default=sequential");
+            Console.WriteLine("                                e.g. --parallel <# of requests to run in parallel>");
+            Console.WriteLine("                                (Note: The original TeamFiltration tool would run 20 requests in parallel by default)");
+            Console.WriteLine("         --shuffle-passwords   Randomize password order per user (while tracking attempted passwords)");
+            Console.WriteLine("         --shuffle-useragents   Randomize user agent per request from %-separated list in config");
             Console.WriteLine("         --time-window         Defines a time windows where spraying should accour, in the military time format <12:00-19:00>");
+            Console.WriteLine("                                e.g. --time-window <HH:mm-HH:mm>");
             Console.WriteLine("         --push                Get Pushover notifications when valid credentials are found (requires pushover keys in config)");
             Console.WriteLine("         --push-locked         Get Pushover notifications when an sprayed account gets locked (requires pushover keys in config)");
             Console.WriteLine("         --force               Force the spraying to proceed even if there is less the <sleep> time since the last attempt\n");
 
             Console.WriteLine("   --enum        Load the enumeration module\n");
             Console.WriteLine("         --domain              Domain to perfom enumeration against, names pulled from statistically-likely-usernames if not provided with --usernames");
+            Console.WriteLine("                                e.g. --domain <domain>");
             Console.WriteLine("         --usernames           Path to a list of usernames to enumerate (emails)");
+            Console.WriteLine("                                e.g. --usernames <path>");
             Console.WriteLine("         --tenant-info         Enumerates tenant and domain information (Based on Invoke-AADIntReconAsOutsider from AADInternal)");
             Console.WriteLine("         --dehashed            Use the dehashed submodule in order to enumerate emails from a basedomain");
             Console.WriteLine("         --validate-msol       Validate that the given o365 accounts exists using the public GetCredentialType method (Very RateLimited - Slow 20 e/s)");
@@ -124,7 +138,7 @@ namespace TeamFiltration
 ";
 
             Console.WriteLine(asci);
-            Console.WriteLine("[♥] TeamFiltration V3.5.5 PUBLIC, created by @Flangvik at @TrustedSec");
+            Console.WriteLine("[♥] TeamFiltrationFlareprox Mod V2.0 PUBLIC, created by @Flangvik at @TrustedSec and modified by @S1lly-G1t to use FlareProx by @MrTurvey");
             Console.WriteLine($"[+] Args parsed {string.Join(' ', args)}");
 
 

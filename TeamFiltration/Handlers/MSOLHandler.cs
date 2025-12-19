@@ -267,7 +267,7 @@ namespace TeamFiltration.Handlers
     </s:Body>
 </s:Envelope>";
 
-                client.DefaultRequestHeaders.Add("User-Agent", _globalProperties.TeamFiltrationConfig.UserAgent);
+                client.DefaultRequestHeaders.Add("User-Agent", string.IsNullOrEmpty(sprayAttempts.UserAgent) ? _globalProperties.TeamFiltrationConfig.UserAgent : sprayAttempts.UserAgent);
                 // Add X-Target-URL header for FlareProx
                 client.DefaultRequestHeaders.Add("X-Target-URL", targetAadSsoUrl);
 
@@ -326,7 +326,7 @@ namespace TeamFiltration.Handlers
                 Uri targetAdfsUrl = new Uri(userRealmResp.ThirdPartyAuthUrl);
                 string queryString = targetAdfsUrl.Query;
 
-                client.DefaultRequestHeaders.Add("User-Agent", _globalProperties.TeamFiltrationConfig.UserAgent);
+                client.DefaultRequestHeaders.Add("User-Agent", string.IsNullOrEmpty(sprayAttempts.UserAgent) ? _globalProperties.TeamFiltrationConfig.UserAgent : sprayAttempts.UserAgent);
 
                 // Parse the query string into a dictionary of key-value pairs
                 var queryParams = HttpUtility.ParseQueryString(queryString);
@@ -407,7 +407,7 @@ namespace TeamFiltration.Handlers
                 new KeyValuePair<string, string>("scope", "openid")  });
 
                 client.DefaultRequestHeaders.Add("Accept", "application/json");
-                client.DefaultRequestHeaders.Add("User-Agent", _globalProperties.TeamFiltrationConfig.UserAgent);
+                client.DefaultRequestHeaders.Add("User-Agent", string.IsNullOrEmpty(sprayAttempts.UserAgent) ? _globalProperties.TeamFiltrationConfig.UserAgent : sprayAttempts.UserAgent);
 
                 // Determine target URL for X-Target-URL header
                 string targetUrl;

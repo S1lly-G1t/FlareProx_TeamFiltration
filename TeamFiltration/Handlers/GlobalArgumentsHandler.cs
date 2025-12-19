@@ -86,8 +86,34 @@ namespace TeamFiltration.Handlers
 			}
 			else
 			{
-				var configText = File.ReadAllText(teamFiltrationConfigPath);
-				TeamFiltrationConfig = JsonConvert.DeserializeObject<Config>(configText);
+				try
+				{
+					var configText = File.ReadAllText(teamFiltrationConfigPath);
+					TeamFiltrationConfig = JsonConvert.DeserializeObject<Config>(configText);
+				}
+				catch (JsonReaderException ex)
+				{
+					Console.WriteLine($"[!] ERROR: Failed to parse config file: {teamFiltrationConfigPath}");
+					Console.WriteLine($"[!] JSON Error: {ex.Message}");
+					Console.WriteLine($"[!] Please check that your JSON is properly formatted, especially the UserAgent field.");
+					Console.WriteLine($"[!] UserAgent should be a single string with % as delimiter between multiple user agents.");
+					Console.WriteLine($"[!] Example: \"UserAgent\": \"agent1%agent2%agent3\"");
+					if (!exfilModule)
+					{
+						Environment.Exit(1);
+					}
+					TeamFiltrationConfig = new Config() { };
+				}
+				catch (Exception ex)
+				{
+					Console.WriteLine($"[!] ERROR: Failed to load config file: {teamFiltrationConfigPath}");
+					Console.WriteLine($"[!] Error: {ex.Message}");
+					if (!exfilModule)
+					{
+						Environment.Exit(1);
+					}
+					TeamFiltrationConfig = new Config() { };
+				}
 			}
 
 

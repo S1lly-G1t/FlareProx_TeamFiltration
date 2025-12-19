@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -50,6 +50,7 @@ namespace TeamFiltration.Models.TeamFiltration
         public string ResourceClientId { get; set; }
         public string ResponseData { get; set; }
         public string ComboHash { get; set; }
+        public string UserAgent { get; set; }
         public DateTime DateTime { get; set; }
     }
 }
