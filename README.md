@@ -11,7 +11,6 @@ flareprox.py --count [Amount of endpoints you want to spin up]</pre>
 > [!NOTE]  
 > - If you have 2 endpoints in ```flareprox_endpoints.json``` and use ```--shuffle-regions```, it will randomly pick between them for each spray attempt. (You don't really need to do this as a single endpoint always sends each request with a different IP address)
 > - The AWS keys can be ignored in the ```TeamFiltrationConfig.json``` as that feature has been disabled with this version.
-> - If you want to use the ```--enum --validate-teams``` module with flareprox, then you will need to copy the code in ```CloudFlareWorker.js``` and paste it inside your ```worker.js``` on [https://dash.cloudflare.com/](url)
 
 > [!TIP]
 > ### Compiling the source code (Optional):
@@ -41,3 +40,7 @@ It will use your flareprox endpoints by default (by reading the ```flareprox_end
 
 > [!WARNING] 
 > Use ```--parallel 20``` ```--jitter 60``` to make it spray users in batches of 20 with 60 second intervals between each batch (The default behaviour of the original teamfiltration tool) otherwise it will spray all users without delays.
+
+### ```--enum``` module
+The usage is the same as the original tool.
+If you want to use the ```--enum --validate-teams``` module with flareprox proxies, then you will need to copy the code in ```CloudFlareWorker.js``` and paste it inside your ```worker.js``` on [https://dash.cloudflare.com/](url)
