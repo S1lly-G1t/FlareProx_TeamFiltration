@@ -34,7 +34,7 @@ flareprox.py --count [Amount of endpoints you want to spin up]</pre>
 
 # Usage:
 ### ```--spray``` module
-<pre lang=lisp>.\TeamFiltration_FlareProx.exe  --outpath '[PATH/FOR/.db FILE]' --config .\TeamFiltrationConfig_Example.json --spray --usernames 'valid_users.txt' --passwords 'SeasonYear_Pass.txt' --domain example.com --shuffle-useragents --parallel 20 --jitter 60 </pre>
+<pre lang=lisp>.\TeamFiltrationFlareProx.exe  --outpath '[PATH/FOR/.db FILE]' --config .\TeamFiltrationConfig_Example.json --spray --usernames 'valid_users.txt' --passwords 'SeasonYear_Pass.txt' --domain example.com --shuffle-useragents --parallel 20 --jitter 60 </pre>
 It will use your flareprox endpoints by default (by reading the ```flareprox_endpoints.json``` file in the same directory) - unless you use ```--allow-direct``` which allows direct connections without proxies.
 
 > [!IMPORTANT]  
