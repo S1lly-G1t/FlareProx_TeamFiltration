@@ -4,20 +4,23 @@
 
 # Install
 Downloaded the latest .zip from the releases page.
-The AWS keys can be ignored in the ```TeamFiltrationConfig.json``` as that feature has been disabled with this version.
+> [!NOTE]  
+> The AWS keys can be ignored in the ```TeamFiltrationConfig.json``` as that feature has been disabled with this version.
 
 ### The ```flareprox_endpoints.json``` is generated using [https://github.com/MrTurvey/flareprox](url)
 <pre lang=lisp>
 flareprox.py --count [Amount of endpoints you want to spin up]</pre>
-If you have 2 endpoints in ```flareprox_endpoints.json``` and use ```--shuffle-regions```, it will randomly pick between them for each spray attempt. (You don't really need to do this as a single endpoint always sends each request with a different IP address)
+> [!NOTE]  
+> If you have 2 endpoints in ```flareprox_endpoints.json``` and use ```--shuffle-regions```, it will randomly pick between them for each spray attempt. (You don't really need to do this as a single endpoint always sends each request with a different IP address)
 
-> ### Alternatively, compile the code:
+> [!TIP]
+> ### Compiling the source code (Optional):
 > In the `.sln` directory run:
 > <pre lang=lisp>dotnet restore</pre>
 > In the `.csproj` directory run:
 > <pre lang=lisp>dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:UseAppHost=true</pre>
 > The required files will be in the `\TeamFiltration\TeamFiltration\bin` directory and the OneDriveAPI .dll will be in `\TeamFiltration\OneDriveAPI\bin`
-
+>
 > The following files need to be in the same directory when executing the tool:
 > <pre lang=lisp>
 > TeamFiltration_FlareProx.exe
@@ -30,9 +33,13 @@ If you have 2 endpoints in ```flareprox_endpoints.json``` and use ```--shuffle-r
 
 # Usage:
 > [!IMPORTANT]  
-> ### If you have multiple useragents in your config file, then you must specify ```--shuffle-useragents``` 
+> If you have multiple useragents in your config file, then you must specify ```--shuffle-useragents``` or the spray will fail.
+
+> [!WARNING] 
+> Use ```--parallel 20``` ```--jitter 60``` to make it spray users in batches of 20 with 60 second intervals between each batch (The default behaviour of the original teamfiltration tool) otherwise it will spray all users without delays.
 <pre lang=lisp>.\TeamFiltration_FlareProx.exe  --outpath '[PATH/FOR/.db FILE]' --config .\TeamFiltrationConfig_Example.json --spray --usernames 'valid_users.txt' --passwords 'SeasonYear_Pass.txt' --domain example.com --shuffle-useragents --parallel 20 --jitter 60 </pre>
 
-It will use your flareprox endpoints by default (by reading the ```flareprox_endpoints.json``` file in the same directory) - unless you use ```--allow-direct``` which allows direct connections without flareprox proxies.
+It will use your flareprox endpoints by default (by reading the ```flareprox_endpoints.json``` file in the same directory) - unless you use ```--allow-direct``` which allows direct connections without proxies.
+
 > [!NOTE]  
 > If you want to use the ```--enum --validate-teams``` module with flareprox, then you will need to copy the code in ```CloudFlareWorker.js``` and paste it inside your ```worker.js``` on [https://dash.cloudflare.com/](url)
