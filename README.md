@@ -7,7 +7,7 @@ Amalgamation of [TeamFiltration](https://github.com/Flangvik/TeamFiltration) and
 # Install
 Downloaded the latest .zip from the releases page.
 
-The ```flareprox_endpoints.json``` is generated using [Flareprox](https://github.com/MrTurvey/flareprox)
+The ```flareprox_endpoints.json``` is generated using [Flareprox](https://github.com/MrTurvey/flareprox) and needs to be in the same directory as the .exe and .dll files
 <pre lang=lisp>
 flareprox.py --count [Amount of endpoints you want to spin up]</pre>
 > [!NOTE]  
