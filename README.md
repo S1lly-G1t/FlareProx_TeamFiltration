@@ -2,10 +2,12 @@
 <img width="865" height="444" alt="Untitled Diagram drawio" src="https://github.com/user-attachments/assets/a1db99fd-131b-4ebb-8288-a132e681ddb5" />
 </p>
 
+Amalgamation of [TeamFiltration](https://github.com/Flangvik/TeamFiltration) and [Flareprox](https://github.com/MrTurvey/flareprox) 🤝
+
 # Install
 Downloaded the latest .zip from the releases page.
 
-### The ```flareprox_endpoints.json``` is generated using [https://github.com/MrTurvey/flareprox](url)
+The ```flareprox_endpoints.json``` is generated using [Flareprox](https://github.com/MrTurvey/flareprox)
 <pre lang=lisp>
 flareprox.py --count [Amount of endpoints you want to spin up]</pre>
 > [!NOTE]  
@@ -36,7 +38,7 @@ flareprox.py --count [Amount of endpoints you want to spin up]</pre>
 It will use your flareprox endpoints by default (by reading the ```flareprox_endpoints.json``` file in the same directory) - unless you use ```--allow-direct``` which allows direct connections without proxies.
 
 > [!IMPORTANT]  
-> If you have multiple useragents in your config file, then you must specify ```--shuffle-useragents``` or the spray will fail.
+> If you have multiple useragents in your config file, E.G. ```"UserAgent": "UserAgent1%UserAgent2%UserAgent3"```, then you must specify ```--shuffle-useragents``` or the spray will fail.
 
 > [!WARNING] 
 > Use ```--parallel 20``` ```--jitter 60``` to make it spray users in batches of 20 with 60 second intervals between each batch (The default behaviour of the original teamfiltration tool) otherwise it will spray all users without delays.
