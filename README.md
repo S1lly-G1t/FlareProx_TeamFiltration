@@ -47,7 +47,7 @@ It will use your flareprox endpoints by default (by reading the ```flareprox_end
 The usage is the same as the original tool.
 If you want to use the ```--enum --validate-teams``` module with flareprox proxies, then you will need to copy the code in ```CloudFlareWorker.js``` and paste it inside your ```worker.js``` on [https://dash.cloudflare.com/](url)
 
-### ⚠️ Legal Notice
+# ⚠️ Legal Notice
 IMPORTANT: This toolset is for authorised security testing only.
 
 Always obtain written permission
