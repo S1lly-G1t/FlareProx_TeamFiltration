@@ -2,7 +2,7 @@
 <img width="865" height="444" alt="Untitled Diagram drawio" src="https://github.com/user-attachments/assets/a1db99fd-131b-4ebb-8288-a132e681ddb5" />
 </p>
 
-Amalgamation of [TeamFiltration](https://github.com/Flangvik/TeamFiltration) and [Flareprox](https://github.com/MrTurvey/flareprox) 🤝
+Combination of [TeamFiltration](https://github.com/Flangvik/TeamFiltration) and [Flareprox](https://github.com/MrTurvey/flareprox) 🤝
 
 # Install
 Downloaded the latest .zip from the releases page.
